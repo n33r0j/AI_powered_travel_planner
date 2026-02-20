@@ -6,6 +6,7 @@ from typing import Dict, Any
 
 from models import TravelRequest, TravelResponse, ErrorResponse
 from services.llm_service import llm_service
+from services.weather_service import weather_service
 from utils.budget_validator import BudgetValidator
 
 # Configure logging
@@ -88,6 +89,7 @@ async def generate_itinerary(request: TravelRequest) -> TravelResponse:
     - duration_days: Number of days (1-30)
     - budget: Total budget in USD
     - interests: List of interests (e.g., ["culture", "food", "adventure"])
+    - weather_aware: Include weather forecast (default: True)
     
     **Returns:**
     - Complete itinerary with day-by-day activities
@@ -95,12 +97,35 @@ async def generate_itinerary(request: TravelRequest) -> TravelResponse:
     - Transportation options
     - Budget breakdown
     - Travel tips
+    - Weather-adapted activities (if enabled)
     """
     try:
-        logger.info(f"Generating itinerary for {request.destination}, {request.duration_days} days, ${request.budget}")
+        logger.info(
+            f"Generating itinerary for {request.destination}, "
+            f"{request.duration_days} days, ${request.budget}, "
+            f"weather_aware={request.weather_aware}"
+        )
+        
+        # Get weather context if enabled
+        weather_context = ""
+        if request.weather_aware:
+            try:
+                weather_data = weather_service.get_weather_context(
+                    request.destination,
+                    request.duration_days
+                )
+                weather_context = weather_data["summary"]
+                logger.info(f"Weather context: {weather_data['has_rain']=}, rainy_days={weather_data['rainy_days']}")
+            except Exception as e:
+                logger.warning(f"Could not fetch weather data: {str(e)}")
+                # Continue without weather context
         
         # Generate itinerary with budget validation
-        response = llm_service.generate_with_budget_constraint(request, max_retries=2)
+        response = llm_service.generate_with_budget_constraint(
+            request, 
+            max_retries=2,
+            weather_context=weather_context
+        )
         
         # Get budget summary
         budget_summary = budget_validator.get_budget_summary(

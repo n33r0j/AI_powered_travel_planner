@@ -32,13 +32,19 @@ class LLMService:
         with open(prompt_path, 'r') as f:
             self.prompt_template = f.read()
     
-    def generate_itinerary(self, request: TravelRequest, retry_count: int = 0) -> Dict[str, Any]:
+    def generate_itinerary(
+        self, 
+        request: TravelRequest, 
+        retry_count: int = 0,
+        weather_context: str = ""
+    ) -> Dict[str, Any]:
         """
         Generate travel itinerary using Gemini LLM
         
         Args:
             request: TravelRequest object with user requirements
             retry_count: Number of retries attempted (for recursive budget adjustment)
+            weather_context: Optional weather forecast context
             
         Returns:
             Dictionary containing the parsed itinerary
@@ -53,7 +59,8 @@ class LLMService:
                 destination=request.destination,
                 duration=request.duration_days,
                 budget=request.budget,
-                interests=", ".join(request.interests)
+                interests=", ".join(request.interests),
+                weather_context=weather_context if weather_context else ""
             )
             
             # Add retry context if this is a budget adjustment
@@ -147,7 +154,8 @@ class LLMService:
     def generate_with_budget_constraint(
         self, 
         request: TravelRequest, 
-        max_retries: int = 2
+        max_retries: int = 2,
+        weather_context: str = ""
     ) -> TravelResponse:
         """
         Generate itinerary with automatic budget validation and retry
@@ -155,6 +163,7 @@ class LLMService:
         Args:
             request: TravelRequest object
             max_retries: Maximum number of retries if budget is exceeded
+            weather_context: Optional weather forecast context
             
         Returns:
             TravelResponse object with validated itinerary
@@ -165,7 +174,11 @@ class LLMService:
         
         for attempt in range(max_retries + 1):
             # Generate itinerary
-            itinerary_data = self.generate_itinerary(request, retry_count=attempt)
+            itinerary_data = self.generate_itinerary(
+                request, 
+                retry_count=attempt,
+                weather_context=weather_context
+            )
             
             # Validate budget
             is_valid, total_cost, breakdown = validator.validate_budget(

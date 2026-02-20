@@ -8,6 +8,7 @@ class TravelRequest(BaseModel):
     duration_days: int = Field(..., gt=0, le=30, description="Number of days (1-30)")
     budget: int = Field(..., gt=0, description="Total budget in USD")
     interests: List[str] = Field(..., min_length=1, max_length=10, description="List of interests")
+    weather_aware: bool = Field(default=True, description="Include weather forecast in planning")
     
     @field_validator('destination')
     @classmethod
@@ -30,7 +31,8 @@ class TravelRequest(BaseModel):
                     "destination": "Tokyo, Japan",
                     "duration_days": 5,
                     "budget": 2000,
-                    "interests": ["culture", "food", "technology", "temples"]
+                    "interests": ["culture", "food", "technology", "temples"],
+                    "weather_aware": True
                 }
             ]
         }

@@ -1,6 +1,6 @@
 # 🌍 AI-Powered Travel Planner
 
-> An intelligent travel planning system that generates personalized, budget-constrained itineraries using Google Gemini AI
+> A context-aware travel planning system that generates personalized, budget-constrained itineraries using Google Gemini AI with real-time weather adaptation
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109.0-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
@@ -11,17 +11,29 @@
 
 ## 🎯 Project Overview
 
-This is a **production-ready backend API** that leverages Large Language Models (LLMs) to create realistic, geographically accurate travel itineraries with automatic budget validation. Built with modern software engineering practices and designed to showcase AI engineering capabilities.
+This is a **hybrid AI orchestration system** that combines LLM reasoning with real-time data to create realistic, geographically accurate travel itineraries with automatic budget validation. Built with modern software engineering practices and designed to showcase advanced AI engineering capabilities.
 
 ### ✨ Key Features
 
+- 🌤️ **Weather-Aware Planning**: Integrates live weather forecasts to adapt activities (indoor vs outdoor)
 - 🤖 **AI-Powered Planning**: Uses Google Gemini 2.5 Flash for intelligent itinerary generation
 - 💰 **Budget Validation**: Automatic cost calculation with retry logic if budget exceeded
 - 📊 **Structured Output**: Fully validated JSON responses with Pydantic models
-- 🔄 **Retry Mechanism**: Self-correcting system for budget constraint violations
+- 🔄 **Context Augmentation**: Enriches LLM prompts with real-world data (weather, dates)
 - 📝 **Auto-Documentation**: Interactive Swagger UI and ReDoc included
 - 🏗️ **Clean Architecture**: Modular design with separation of concerns
 - ⚡ **Fast & Async**: Built on FastAPI for high performance
+
+### 🧠 What Makes This Different
+
+**This is NOT just an LLM wrapper.** It's a context-aware AI system that:
+- Fetches real-time weather data from Open-Meteo API
+- Simplifies complex data before injecting into prompts
+- Adapts LLM reasoning based on environmental conditions
+- Validates and post-processes AI output
+
+Example: On rainy days → prioritizes museums, temples, covered markets  
+On sunny days → includes parks, outdoor tours, walking experiences
 
 ---
 
@@ -55,11 +67,15 @@ User Request
      ↓
 FastAPI Endpoint (Pydantic Validation)
      ↓
-LLM Service (Google Gemini)
+     ├─→ Weather Service (Open-Meteo API)
+     │   ├─ Geocoding
+     │   ├─ Weather Forecast
+     │   └─ Condition Simplification
      ↓
-Structured Prompt Engineering
-     ↓
-JSON Response Parsing
+LLM Service (Google Gemini 2.5)
+     ├─ Prompt Engineering
+     ├─ Weather Context Injection
+     └─ Structured JSON Generation
      ↓
 Budget Validator (Post-Processing)
      ↓
@@ -67,6 +83,12 @@ Budget Validator (Post-Processing)
      ↓ No
 Retry with Budget Constraint (max 2 retries)
 ```
+
+**This is a Hybrid AI System:**
+- LLM handles reasoning and planning
+- Weather API provides real-time context
+- Budget validator ensures constraints
+- System orchestrates all components
 
 ### 📂 Project Structure
 
@@ -77,7 +99,8 @@ travel_planner_ai/
 ├── models.py                        # Pydantic models for validation
 │
 ├── services/
-│   └── llm_service.py              # Google Gemini integration
+│   ├── llm_service.py              # Google Gemini integration
+│   └── weather_service.py          # Weather API integration
 │
 ├── prompts/
 │   └── itinerary_prompt.txt        # Structured prompt template
@@ -85,6 +108,8 @@ travel_planner_ai/
 ├── utils/
 │   └── budget_validator.py         # Budget validation logic
 │
+├── test_api.py                      # API testing script
+├── demo_weather.py                  # Weather comparison demo
 ├── .env.example                     # Environment variables template
 ├── .gitignore                       # Git ignore file
 ├── requirements.txt                 # Python dependencies
@@ -217,31 +242,105 @@ curl -X POST "http://localhost:8000/generate-itinerary" \
 
 ---
 
+## 🌤️ Weather-Aware Planning
+
+### How It Works
+
+The system fetches live weather forecasts and adapts activities:
+
+**Example Request with Weather:**
+```json
+{
+  "destination": "Paris, France",
+  "duration_days": 3,
+  "budget": 1000,
+  "interests": ["art", "food"],
+  "weather_aware": true
+}
+```
+
+**What Happens:**
+1. System fetches 3-day weather forecast for Paris
+2. Simplifies data: "Day 1: Sunny, Day 2: Rain (70%), Day 3: Cloudy"
+3. Injects weather context into LLM prompt
+4. LLM adapts activities:
+   - **Rainy days** → Museums, indoor markets, covered attractions
+   - **Sunny days** → Parks, walking tours, outdoor cafes
+
+### Demo: Compare Weather-Aware vs Standard
+
+```bash
+python demo_weather.py
+```
+
+This generates TWO itineraries for comparison:
+- 🔵 Standard (no weather context)
+- 🌤️ Weather-Aware (with forecast)
+
+You'll see how activities change based on weather! Save results to `weather_comparison.json`.
+
+### Manual Testing
+
+**Test A - Disable Weather:**
+```bash
+curl -X POST "http://localhost:8000/generate-itinerary" \
+  -H "Content-Type: application/json" \
+  -d '{"destination": "Tokyo", "duration_days": 2, "budget": 800, 
+       "interests": ["culture"], "weather_aware": false}'
+```
+
+**Test B - Enable Weather:**
+```bash
+curl -X POST "http://localhost:8000/generate-itinerary" \
+  -H "Content-Type: application/json" \
+  -d '{"destination": "Tokyo", "duration_days": 2, "budget": 800, 
+       "interests": ["culture"], "weather_aware": true}'
+```
+
+Compare the `activities` in both responses!
+
+---
+
 ## 🧠 Technical Highlights
 
-### 1. **Prompt Engineering**
+### 1. **Weather-Aware Context Augmentation**
+- Real-time weather API integration (Open-Meteo - free, no key needed)
+- Geocoding for any destination worldwide
+- Weather condition simplification (complex data → simple context)
+- Dynamic prompt injection based on forecast
+- Activity adaptation logic (indoor/outdoor selection)
+
+### 2. **Hybrid AI Orchestration**
+- **Not just an LLM wrapper** - combines multiple data sources
+- LLM handles creative planning and reasoning
+- Weather API provides environmental context
+- Budget validator ensures constraint satisfaction
+- System orchestrates all components intelligently
+
+### 3. **Prompt Engineering**
 - Structured prompt template with clear output format specification
 - Dynamic variable injection with user preferences
+- Weather context integration
 - JSON schema enforcement for consistent responses
 
-### 2. **LLM Output Validation**
+### 4. **LLM Output Validation**
 - JSON parsing with fallback extraction
 - Pydantic model validation for type safety
 - Automatic retry on malformed responses
 
-### 3. **Budget Intelligence**
+### 5. **Budget Intelligence**
 - Post-generation cost calculation
 - Automatic budget violation detection
 - Recursive retry with constraint reinforcement
 - 5% tolerance buffer for realistic planning
 
-### 4. **Error Handling**
+### 6. **Error Handling**
 - Custom exception handling for API errors
 - Detailed logging for debugging
 - User-friendly error messages
 - Graceful degradation
 
-### 5. **Best Practices**
+### 7. **Best Practices**
 - Environment variable management
 - Modular service architecture
 - Type hints throughout codebase
@@ -256,8 +355,16 @@ This project showcases:
 
 ✅ **AI Engineering**
 - LLM integration and prompt design
+- Context augmentation with external data
 - Structured output parsing
 - Post-processing validation
+- **Hybrid AI orchestration** (LLM + Real-time data)
+
+✅ **API Integration**
+- Google Gemini AI API
+- Open-Meteo Weather API
+- Geocoding services
+- Error handling across multiple APIs
 
 ✅ **Backend Development**
 - RESTful API design with FastAPI
@@ -276,9 +383,9 @@ This project showcases:
 
 ---
 
-## 🔮 Future Enhancements (Phase 2)
+## 🔮 Future Enhancements
 
-- [ ] **Weather API Integration**: Adjust activities based on forecast
+- [x] **Weather API Integration**: ✅ IMPLEMENTED - Adjusts activities based on forecast
 - [ ] **Real-time Pricing**: Integrate flight/hotel APIs for live prices
 - [ ] **User Preferences**: Save/load user profiles
 - [ ] **Multi-city Planning**: Support complex itineraries
@@ -286,6 +393,8 @@ This project showcases:
 - [ ] **Frontend UI**: React/Vue dashboard
 - [ ] **Authentication**: User accounts with JWT
 - [ ] **Caching**: Redis for frequently requested destinations
+- [ ] **Activity Conflict Detection**: Flag weather-inappropriate activities
+- [ ] **Alternative Suggestions**: Backup plans if weather changes
 
 ---
 

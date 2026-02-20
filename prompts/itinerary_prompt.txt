@@ -8,6 +8,8 @@ Generate a detailed travel itinerary based on the following user requirements:
 - Budget: ${budget} USD
 - Interests: {interests}
 
+{weather_context}
+
 **Requirements:**
 1. The TOTAL estimated cost MUST NOT exceed ${budget} USD
 2. Provide a detailed day-by-day itinerary with specific activities
@@ -17,6 +19,10 @@ Generate a detailed travel itinerary based on the following user requirements:
 6. Break down estimated costs per day realistically
 7. Consider the user's interests when selecting activities
 8. Include specific locations, timings, and practical tips
+9. **IMPORTANT: If weather conditions are provided, adapt activities accordingly:**
+   - On rainy/bad weather days: Prioritize indoor activities (museums, temples, shopping malls, covered markets, indoor attractions)
+   - On sunny/good weather days: Include outdoor sightseeing, parks, walking tours, outdoor markets
+   - Suggest appropriate clothing and transport based on weather
 
 **Critical: Return ONLY valid JSON. No markdown, no code blocks, no explanation, no extra text.**
 
