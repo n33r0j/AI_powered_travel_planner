@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Travel Planner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gradient-to-br from-gray-950 via-gray-900 to-black min-h-screen flex items-center justify-center text-white">
+
+<div class="w-full max-w-xl p-8 rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl">
+
+  <div class="text-center mb-8">
+    <h1 class="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+      AI Travel Planner
+    </h1>
+    
+    <p class="text-gray-400 text-sm">
+      🌤️ Weather-aware • 💰 Budget-aware • 🤖 AI-powered
+    </p>
+  </div>
+
+  <form id="tripForm" action="/generate-ui" method="post" class="space-y-5">
+
+    <div>
+      <label class="block text-sm text-gray-400 mb-2">Destination</label>
+      <input name="destination" placeholder="e.g., Tokyo, Japan"
+        class="w-full p-3 rounded-xl bg-white/10 border border-white/10 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        required>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm text-gray-400 mb-2">Duration</label>
+        <input name="duration_days" type="number" placeholder="Days" min="1" max="30"
+          class="w-full p-3 rounded-xl bg-white/10 border border-white/10 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 transition"
+          required>
+      </div>
+
+      <div>
+        <label class="block text-sm text-gray-400 mb-2">Currency</label>
+        <select name="currency" id="currencySelect" onchange="updateBudgetPlaceholder()"
+          class="w-full p-3 rounded-xl bg-white/10 border border-white/10 text-white focus:ring-2 focus:ring-blue-500 transition">
+          <option value="USD" selected>USD ($)</option>
+          <option value="INR">INR (₹)</option>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-sm text-gray-400 mb-2">Budget</label>
+      <input name="budget" id="budgetInput" type="number" placeholder="e.g., $1500 or ₹50,000" min="1"
+        class="w-full p-3 rounded-xl bg-white/10 border border-white/10 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 transition"
+        required>
+      <p class="text-xs text-gray-500 mt-1" id="conversionHint"></p>
+    </div>
+
+    <div>
+      <label class="block text-sm text-gray-400 mb-2">Interests</label>
+      <input name="interests" placeholder="e.g., culture, food, museums"
+        class="w-full p-3 rounded-xl bg-white/10 border border-white/10 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 transition">
+    </div>
+
+    <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+      <input type="checkbox" name="weather_aware" value="true" checked
+        class="w-4 h-4 rounded accent-blue-500">
+      <label class="text-sm text-gray-300">Include weather forecast in planning</label>
+    </div>
+
+    <button id="submitBtn" type="submit"
+      class="w-full p-4 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg hover:shadow-blue-500/40 font-semibold text-lg">
+      <span id="btnText">Generate Itinerary ✨</span>
+      <span id="btnLoader" class="hidden">
+        <svg class="inline animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Generating trip...
+      </span>
+    </button>
+
+  </form>
+
+  <div class="mt-6 text-center">
+    <a href="/docs" target="_blank" class="text-sm text-gray-500 hover:text-gray-300 transition">
+      📚 API Documentation
+    </a>
+  </div>
+
+</div>
+
+<script>
+  const exchangeRates = {
+    USD: 1.0,
+    INR: 83.0
+  };
+
+  function updateBudgetPlaceholder() {
+    const currency = document.getElementById('currencySelect').value;
+    const budgetInput = document.getElementById('budgetInput');
+    const conversionHint = document.getElementById('conversionHint');
+    
+    if (currency === 'USD') {
+      budgetInput.placeholder = 'e.g., 1500';
+    } else if (currency === 'INR') {
+      budgetInput.placeholder = 'e.g., 50000';
+    }
+    
+    // Update conversion hint if there's a value
+    updateConversionHint();
+  }
+
+  function updateConversionHint() {
+    const currency = document.getElementById('currencySelect').value;
+    const budgetValue = document.getElementById('budgetInput').value;
+    const conversionHint = document.getElementById('conversionHint');
+    
+    if (!budgetValue || budgetValue == 0) {
+      conversionHint.textContent = '';
+      return;
+    }
+    
+    if (currency === 'INR') {
+      const usdValue = (parseFloat(budgetValue) / exchangeRates.INR).toFixed(2);
+      conversionHint.textContent = `≈ $${usdValue} USD (1 USD = ₹${exchangeRates.INR})`;
+    } else {
+      const inrValue = (parseFloat(budgetValue) * exchangeRates.INR).toFixed(0);
+      conversionHint.textContent = `≈ ₹${inrValue} INR (1 USD = ₹${exchangeRates.INR})`;
+    }
+  }
+
+  // Add event listener for budget input changes
+  document.getElementById('budgetInput').addEventListener('input', updateConversionHint);
+
+  document.getElementById('tripForm').addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnLoader = document.getElementById('btnLoader');
+    
+    btn.disabled = true;
+    btn.classList.add('opacity-75', 'cursor-not-allowed');
+    btnText.classList.add('hidden');
+    btnLoader.classList.remove('hidden');
+  });
+</script>
+
+</body>
+</html>

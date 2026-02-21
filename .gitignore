@@ -34,6 +34,9 @@ wheels/
 *.swo
 *~
 
-# OS
+# OS  
 .DS_Store
 Thumbs.db
+
+# Database
+*.db

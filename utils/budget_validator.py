@@ -1,4 +1,7 @@
 from typing import Dict, Any, Tuple
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BudgetValidator:
@@ -69,11 +72,41 @@ class BudgetValidator:
                 "food_total": float(provided_breakdown.get("food_total", 0)),
                 "miscellaneous": float(provided_breakdown.get("miscellaneous", 0))
             })
+            
+            # Validate the breakdown
+            self._validate_breakdown_sanity(breakdown)
         else:
             # Calculate from itinerary if breakdown not provided
             breakdown = self._calculate_from_itinerary(itinerary_data)
         
         return breakdown
+    
+    def _validate_breakdown_sanity(self, breakdown: Dict[str, float]) -> None:
+        """
+        Check if budget breakdown is reasonable and log warnings
+        
+        Args:
+            breakdown: Budget breakdown dictionary
+        """
+        total = sum(breakdown.values())
+        if total == 0:
+            return
+        
+        misc_percentage = (breakdown["miscellaneous"] / total) * 100
+        
+        # Check if miscellaneous is unreasonably high (>30%)
+        if misc_percentage > 30:
+            logger.warning(
+                f"Miscellaneous category is {misc_percentage:.1f}% of total budget "
+                f"(${breakdown['miscellaneous']:.2f}). This seems unrealistic. "
+                "Expected: 5-15% for tips/emergencies."
+            )
+        
+        # Check if any category is 0 when it shouldn't be
+        if breakdown["accommodation_total"] == 0:
+            logger.warning("Accommodation cost is $0 - this may be incorrect")
+        if breakdown["food_total"] == 0:
+            logger.warning("Food cost is $0 - this may be incorrect")
     
     def _calculate_from_itinerary(self, itinerary_data: Dict[str, Any]) -> Dict[str, float]:
         """

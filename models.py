@@ -6,16 +6,32 @@ class TravelRequest(BaseModel):
     """Request model for travel itinerary generation"""
     destination: str = Field(..., min_length=2, max_length=100, description="Travel destination")
     duration_days: int = Field(..., gt=0, le=30, description="Number of days (1-30)")
-    budget: int = Field(..., gt=0, description="Total budget in USD")
+    budget: int = Field(..., gt=0, description="Total budget in specified currency")
+    currency: str = Field(default="USD", description="Budget currency (USD or INR)")
     interests: List[str] = Field(..., min_length=1, max_length=10, description="List of interests")
     weather_aware: bool = Field(default=True, description="Include weather forecast in planning")
+    
+    @field_validator('currency')
+    @classmethod
+    def validate_currency(cls, v):
+        allowed_currencies = ['USD', 'INR']
+        v_upper = v.upper()
+        if v_upper not in allowed_currencies:
+            raise ValueError(f'Currency must be one of {allowed_currencies}')
+        return v_upper
     
     @field_validator('destination')
     @classmethod
     def validate_destination(cls, v):
         if not v.strip():
             raise ValueError('Destination cannot be empty')
-        return v.strip()
+        # Clean up destination formatting
+        destination = v.strip()
+        # Fix comma spacing (e.g., "Tokyo,Japan" -> "Tokyo, Japan")
+        if ',' in destination:
+            parts = [part.strip() for part in destination.split(',')]
+            destination = ', '.join(parts)
+        return destination
     
     @field_validator('interests')
     @classmethod
@@ -31,7 +47,16 @@ class TravelRequest(BaseModel):
                     "destination": "Tokyo, Japan",
                     "duration_days": 5,
                     "budget": 2000,
+                    "currency": "USD",
                     "interests": ["culture", "food", "technology", "temples"],
+                    "weather_aware": True
+                },
+                {
+                    "destination": "Goa, India",
+                    "duration_days": 4,
+                    "budget": 50000,
+                    "currency": "INR",
+                    "interests": ["beaches", "nightlife", "food"],
                     "weather_aware": True
                 }
             ]

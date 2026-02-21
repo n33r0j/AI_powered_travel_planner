@@ -1,39 +1,50 @@
 # 🌍 AI-Powered Travel Planner
 
-> A context-aware travel planning system that generates personalized, budget-constrained itineraries using Google Gemini AI with real-time weather adaptation
+> A production-ready, stateful travel planning microservice that generates personalized, budget-constrained itineraries using Google Gemini AI with real-time weather adaptation and persistent storage
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109.0-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
 [![Google Gemini](https://img.shields.io/badge/Google-Gemini_AI-4285F4?style=flat&logo=google&logoColor=white)](https://ai.google.dev/)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-red?style=flat)](https://www.sqlalchemy.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
 ## 🎯 Project Overview
 
-This is a **hybrid AI orchestration system** that combines LLM reasoning with real-time data to create realistic, geographically accurate travel itineraries with automatic budget validation. Built with modern software engineering practices and designed to showcase advanced AI engineering capabilities.
+This is a **production-ready AI microservice** that combines LLM reasoning with real-time data and persistent storage to create realistic, geographically accurate travel itineraries with automatic budget validation. Built with modern software engineering practices to demonstrate full-stack AI engineering capabilities.
 
 ### ✨ Key Features
 
+- 💾 **Persistent Storage**: SQLAlchemy ORM with SQLite for trip history and retrieval
 - 🌤️ **Weather-Aware Planning**: Integrates live weather forecasts to adapt activities (indoor vs outdoor)
 - 🤖 **AI-Powered Planning**: Uses Google Gemini 2.5 Flash for intelligent itinerary generation
 - 💰 **Budget Validation**: Automatic cost calculation with retry logic if budget exceeded
 - 📊 **Structured Output**: Fully validated JSON responses with Pydantic models
-- 🔄 **Context Augmentation**: Enriches LLM prompts with real-world data (weather, dates)
+- 🔄 **Full CRUD Operations**: Create, retrieve, list, and delete trips via RESTful API
 - 📝 **Auto-Documentation**: Interactive Swagger UI and ReDoc included
 - 🏗️ **Clean Architecture**: Modular design with separation of concerns
 - ⚡ **Fast & Async**: Built on FastAPI for high performance
 
 ### 🧠 What Makes This Different
 
-**This is NOT just an LLM wrapper.** It's a context-aware AI system that:
+**This is NOT just an LLM wrapper.** It's a stateful AI microservice that:
+- Stores generated itineraries with unique trip IDs
 - Fetches real-time weather data from Open-Meteo API
 - Simplifies complex data before injecting into prompts
 - Adapts LLM reasoning based on environmental conditions
 - Validates and post-processes AI output
+- Provides full CRUD operations for trip management
 
 Example: On rainy days → prioritizes museums, temples, covered markets  
 On sunny days → includes parks, outdoor tours, walking experiences
+
+**Architecture demonstrates:**
+✅ AI integration  
+✅ External API orchestration  
+✅ Data persistence (ORM)  
+✅ RESTful design  
+✅ Production thinking
 
 ---
 
@@ -79,15 +90,19 @@ LLM Service (Google Gemini 2.5)
      ↓
 Budget Validator (Post-Processing)
      ↓
-[Within Budget?] → Yes → Return Itinerary
-     ↓ No
+[Within Budget?] → Yes → Save to Database
+     ↓                         ↓
+     No                   Return trip_id + Itinerary
+     ↓
 Retry with Budget Constraint (max 2 retries)
 ```
 
-**This is a Hybrid AI System:**
+**This is a Stateful AI Microservice:**
+- SQLAlchemy ORM for data persistence
 - LLM handles reasoning and planning
 - Weather API provides real-time context
 - Budget validator ensures constraints
+- Database stores trip history
 - System orchestrates all components
 
 ### 📂 Project Structure
@@ -97,6 +112,12 @@ travel_planner_ai/
 │
 ├── main.py                          # FastAPI application & endpoints
 ├── models.py                        # Pydantic models for validation
+│
+├── database/
+│   ├── __init__.py                 # Database module exports
+│   ├── db.py                       # SQLAlchemy connection setup
+│   ├── models.py                   # Database ORM models
+│   └── crud.py                     # CRUD operations
 │
 ├── services/
 │   ├── llm_service.py              # Google Gemini integration
@@ -110,6 +131,7 @@ travel_planner_ai/
 │
 ├── test_api.py                      # API testing script
 ├── demo_weather.py                  # Weather comparison demo
+├── travel_planner.db                # SQLite database (auto-generated)
 ├── .env.example                     # Environment variables template
 ├── .gitignore                       # Git ignore file
 ├── requirements.txt                 # Python dependencies
@@ -183,7 +205,7 @@ Once the server is running, access:
 
 #### `POST /generate-itinerary`
 
-Generate a personalized travel itinerary.
+Generate and save a personalized travel itinerary.
 
 **Request Body:**
 ```json
@@ -191,13 +213,15 @@ Generate a personalized travel itinerary.
   "destination": "Tokyo, Japan",
   "duration_days": 3,
   "budget": 1500,
-  "interests": ["culture", "food"]
+  "interests": ["culture", "food"],
+  "weather_aware": true
 }
 ```
 
 **Response:**
 ```json
 {
+  "trip_id": 1,
   "destination": "Tokyo, Japan",
   "duration": 3,
   "estimated_total_cost": 1000.0,
@@ -222,6 +246,68 @@ Generate a personalized travel itinerary.
     "miscellaneous": 100.00
   },
   "travel_tips": [...]
+}
+```
+
+#### `GET /trips/{trip_id}`
+
+Retrieve a specific trip by ID.
+
+**Response:**
+```json
+{
+  "trip_id": 1,
+  "destination": "Tokyo, Japan",
+  "duration_days": 3,
+  "budget": 1500,
+  "interests": ["culture", "food"],
+  "itinerary": {...},
+  "weather_summary": "Day 1: Sunny (22°C), Day 2: Cloudy (19°C)...",
+  "budget_breakdown": {...},
+  "estimated_cost": 1000.0,
+  "weather_aware": true,
+  "created_at": "2026-02-21T10:30:00"
+}
+```
+
+#### `GET /trips?destination=Tokyo&limit=10`
+
+List trips with optional filtering.
+
+**Query Parameters:**
+- `destination` (optional): Filter by destination (partial match)
+- `limit` (optional): Max results (default: 20, max: 100)
+- `offset` (optional): Skip results (default: 0)
+
+**Response:**
+```json
+{
+  "trips": [
+    {
+      "trip_id": 1,
+      "destination": "Tokyo, Japan",
+      "duration_days": 3,
+      "budget": 1500,
+      "estimated_cost": 1000.0,
+      "weather_aware": true,
+      "created_at": "2026-02-21T10:30:00"
+    }
+  ],
+  "count": 1,
+  "offset": 0,
+  "limit": 10
+}
+```
+
+#### `DELETE /trips/{trip_id}`
+
+Delete a trip by ID.
+
+**Response:**
+```json
+{
+  "message": "Trip 1 deleted successfully",
+  "status": "success"
 }
 ```
 

@@ -10,8 +10,11 @@ Generate a detailed travel itinerary based on the following user requirements:
 
 {weather_context}
 
+**CRITICAL: ALL prices must be in USD ($). Do NOT use any other currency symbols (₹, €, £, etc.).**
+**Even if the destination uses another currency, you MUST calculate and provide prices in USD equivalents.**
+
 **Requirements:**
-1. The TOTAL estimated cost MUST NOT exceed ${budget} USD
+1. The TOTAL estimated cost should be between 85-100% of ${budget} USD
 2. Provide a detailed day-by-day itinerary with specific activities
 3. Include local food recommendations for each day
 4. Suggest 2-3 accommodation options with price ranges
@@ -24,14 +27,29 @@ Generate a detailed travel itinerary based on the following user requirements:
    - On sunny/good weather days: Include outdoor sightseeing, parks, walking tours, outdoor markets
    - Suggest appropriate clothing and transport based on weather
 
-**Critical: Return ONLY valid JSON. No markdown, no code blocks, no explanation, no extra text.**
+**Budget Optimization Rules:**
+- **GOAL: Use 85-100% of the provided budget for optimal experience**
+- If budget is generous ($1000+), suggest higher-quality accommodations, premium activities, and better dining options
+- Calculate each category accurately based on actual planned expenses
+- accommodation_total: Aim for 40-50% of budget - suggest mid-range to upscale hotels if budget allows
+- transportation_total: 10-15% of budget - include comfortable options (airport transfers, day passes)
+- **activities_total: Aim for 20-30% of budget** - include paid attractions, premium experiences, tours, workshops, unique activities
+  * For budgets $1000-2000: Include 3-5 paid activities per day
+  * For budgets $2000+: Include premium experiences (cooking classes, private tours, shows, workshops)
+  * Don't rely only on free attractions - paid experiences provide more value
+- food_total: 15-25% of budget - balance street food with quality restaurants, include special dining
+- miscellaneous: 5-10% of the sum of other categories for tips, emergencies, snacks
+- **DO NOT significantly underutilize the budget** - if user provides $1500, aim for $1200-1500, not $500
+- estimated_total_cost: Sum of all 5 categories above (target: 85-100% of budget)
 
-**IMPORTANT JSON RULES:**
-- Use double quotes for all strings
-- No trailing commas
-- No comments
-- Ensure all brackets and braces are properly closed
-- All numeric values must be numbers, not strings
+**Critical JSON Format Rules:**
+- Return ONLY valid JSON - no markdown, no code blocks, no extra text
+- Use double quotes (") for all strings, never single quotes (')
+- No trailing commas after last array/object items
+- All brackets [] and braces {{}} must be properly closed
+- Numeric values as numbers (50, not "50")
+- Keep descriptions concise (max 2 sentences per activity)
+- Test mentally: can this JSON be parsed without errors?
 
 Return this exact structure:
 
@@ -102,3 +120,24 @@ Return this exact structure:
     "Practical tip 2"
   ]
 }}
+
+**Example Budget Breakdown Calculation (3 days, $1500 budget):**
+TARGET: Use 85-100% of $1500 = aim for $1275-1500
+
+Option A - Budget-Conscious ($900):
+- accommodation_total: $60/night × 3 nights = $180
+- transportation_total: $30 airport + ($10/day × 3) = $60
+- activities_total: $20 + $30 + $25 = $75 (Only 8% - TOO LOW)
+- food_total: ($15 + $20 + $25) × 3 = $180
+- miscellaneous: ($180 + $60 + $75 + $180) × 0.08 = $42
+- Total: $537 ❌ Only 36% of budget - TOO LOW, Activities underutilized
+
+Option B - Optimized Experience ($1350): ✅
+- accommodation_total: $120/night × 3 nights = $360 (40%)
+- transportation_total: $80 airport + ($20/day × 3) = $140 (10%)
+- **activities_total: $50 + $80 + $100 + $120 = $350 (26%)** ✅ PERFECT - Includes TeamLab, Tea Ceremony, Rickshaw, Observation Deck
+- food_total: ($25 + $40 + $60) × 3 = $375 (28%)
+- miscellaneous: ($360 + $140 + $350 + $375) × 0.06 = $75 (6%)
+- Total: $1300 ✅ 87% of budget - OPTIMAL
+
+**Key Principle:** Match quality to budget. If user gives $1500, don't plan a $500 trip - plan a $1300 trip with better hotels, **premium activities** (cooking classes, private tours, unique experiences), and quality dining.
