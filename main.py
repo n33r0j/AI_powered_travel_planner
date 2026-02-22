@@ -5,13 +5,16 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 import logging
 import json
+import time
 from typing import Dict, Any, Optional, List
+from collections import defaultdict
 
 from models import TravelRequest, TravelResponse, ErrorResponse
-from services.llm_service import llm_service
+from services.llm_service import llm_service, token_tracker
 from services.weather_service import weather_service
 from utils.budget_validator import BudgetValidator
 from utils.currency_converter import currency_converter
+from utils.cache import weather_cache, llm_cache
 from database import Base, engine, get_db, create_trip, get_trip_by_id, list_trips, delete_trip
 
 # Configure logging
@@ -45,6 +48,63 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Simple rate limiting middleware
+class RateLimitMiddleware:
+    """
+    Basic in-memory rate limiter
+    
+    For production, use Redis-based rate limiting like slowapi or fastapi-limiter
+    """
+    def __init__(self, requests_per_minute: int = 10):
+        self.requests_per_minute = requests_per_minute
+        self.requests = defaultdict(list)
+    
+    def is_allowed(self, client_ip: str) -> bool:
+        """Check if request is allowed"""
+        now = time.time()
+        minute_ago = now - 60
+        
+        # Clean old requests
+        self.requests[client_ip] = [
+            req_time for req_time in self.requests[client_ip]
+            if req_time > minute_ago
+        ]
+        
+        # Check limit
+        if len(self.requests[client_ip]) >= self.requests_per_minute:
+            return False
+        
+        # Add current request
+        self.requests[client_ip].append(now)
+        return True
+
+
+rate_limiter = RateLimitMiddleware(requests_per_minute=20)
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    """Apply rate limiting to API endpoints"""
+    # Skip rate limiting for health, docs, and static pages
+    if request.url.path in ["/", "/health", "/docs", "/redoc", "/openapi.json", "/stats"]:
+        return await call_next(request)
+    
+    client_ip = request.client.host if request.client else "unknown"
+    
+    if not rate_limiter.is_allowed(client_ip):
+        logger.warning(f"Rate limit exceeded for {client_ip}")
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": "Too Many Requests",
+                "detail": "Rate limit exceeded. Please try again later.",
+                "retry_after": 60
+            }
+        )
+    
+    return await call_next(request)
 
 # Initialize budget validator
 budget_validator = BudgetValidator()
@@ -83,6 +143,27 @@ async def health_check() -> Dict[str, str]:
     return {
         "status": "healthy",
         "service": "AI Travel Planner"
+    }
+
+
+@app.get("/stats", tags=["Monitoring"])
+async def get_stats() -> Dict[str, Any]:
+    """
+    Get system statistics including cache performance and token usage
+    
+    Returns cache hit rates, token consumption, and estimated costs
+    """
+    return {
+        "cache": {
+            "weather": weather_cache.stats(),
+            "llm": llm_cache.stats()
+        },
+        "tokens": token_tracker.stats(),
+        "rate_limit": {
+            "limit_per_minute": rate_limiter.requests_per_minute,
+            "active_clients": len(rate_limiter.requests)
+        },
+        "timestamp": time.time()
     }
 
 

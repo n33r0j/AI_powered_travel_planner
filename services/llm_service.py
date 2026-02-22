@@ -9,12 +9,51 @@ from typing import Dict, Any
 from dotenv import load_dotenv
 
 from models import TravelRequest, TravelResponse
+from utils.cache import llm_cache, LLM_CACHE_TTL
 
 # Load environment variables
 load_dotenv()
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
+
+class TokenTracker:
+    """Track token usage and costs"""
+    def __init__(self):
+        self.total_tokens = 0
+        self.total_requests = 0
+        # Gemini 2.5 Flash pricing (approximate, Feb 2026)
+        self.cost_per_1k_tokens = 0.0001  # $0.10 per 1M tokens
+    
+    def log_tokens(self, input_tokens: int, output_tokens: int):
+        """Log token usage"""
+        total = input_tokens + output_tokens
+        self.total_tokens += total
+        self.total_requests += 1
+        estimated_cost = (total / 1000) * self.cost_per_1k_tokens
+        
+        logger.info(
+            f"Token usage: {input_tokens} input + {output_tokens} output = {total} total "
+            f"(~${estimated_cost:.6f} this request, ~${self.total_cost():.4f} total)"
+        )
+    
+    def total_cost(self) -> float:
+        """Calculate total estimated cost"""
+        return (self.total_tokens / 1000) * self.cost_per_1k_tokens
+    
+    def stats(self) -> dict:
+        """Get usage statistics"""
+        return {
+            "total_tokens": self.total_tokens,
+            "total_requests": self.total_requests,
+            "estimated_cost_usd": round(self.total_cost(), 4),
+            "avg_tokens_per_request": round(self.total_tokens / max(1, self.total_requests))
+        }
+
+
+# Global token tracker
+token_tracker = TokenTracker()
 
 
 class LLMService:
@@ -148,7 +187,7 @@ class LLMService:
         weather_context: str = ""
     ) -> Dict[str, Any]:
         """
-        Generate travel itinerary using Gemini LLM
+        Generate travel itinerary using Gemini LLM (with caching and token tracking)
         
         Args:
             request: TravelRequest object with user requirements
@@ -162,6 +201,16 @@ class LLMService:
             ValueError: If JSON parsing fails
             Exception: If API call fails
         """
+        # Generate cache key from request parameters
+        cache_key = f"llm:{request.destination.lower()}:{request.duration_days}:{request.budget}:{','.join(sorted(request.interests))}:{bool(weather_context)}"
+        
+        # Check cache first (only for initial attempts, not retries)
+        if retry_count == 0:
+            cached = llm_cache.get(cache_key)
+            if cached is not None:
+                logger.info(f"LLM cache hit for {request.destination} ({request.duration_days}d, ${request.budget})")
+                return cached
+        
         try:
             # Format the prompt with user data
             formatted_prompt = self.prompt_template.format(
@@ -194,11 +243,28 @@ class LLMService:
             )
             
             # Call Gemini API
+            logger.info(f"Gemini API call for {request.destination} ({request.duration_days}d, ${request.budget})")
             response = self.client.models.generate_content(
                 model=self.model_name,
                 contents=contents,
                 config=config
             )
+            
+            # Log token usage (if available in response metadata)
+            try:
+                if hasattr(response, 'usage_metadata'):
+                    usage = response.usage_metadata
+                    input_tokens = getattr(usage, 'prompt_token_count', 0)
+                    output_tokens = getattr(usage, 'candidates_token_count', 0)
+                    token_tracker.log_tokens(input_tokens, output_tokens)
+                else:
+                    # Estimate tokens if not provided (rough approximation)
+                    estimated_input = len(formatted_prompt) // 4
+                    estimated_output = 2000  # Average response size
+                    token_tracker.log_tokens(estimated_input, estimated_output)
+                    logger.warning("Token counts estimated (usage_metadata not available)")
+            except Exception as e:
+                logger.warning(f"Could not log token usage: {str(e)}")
             
             # Extract text from response - accumulate all parts
             response_text = ""
@@ -233,6 +299,12 @@ class LLMService:
             
             # Parse JSON response using robust parser
             itinerary_data = self._parse_json_response(response_text)
+            
+            # Cache successful response (only for initial attempts)
+            if retry_count == 0:
+                llm_cache.set(cache_key, itinerary_data, ttl_seconds=LLM_CACHE_TTL)
+                logger.debug(f"Cached LLM response for {request.destination}")
+            
             return itinerary_data
         
         except Exception as e:

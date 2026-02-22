@@ -2,6 +2,7 @@ import requests
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import logging
+from utils.cache import weather_cache, WEATHER_CACHE_TTL
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ class WeatherService:
     
     def get_coordinates(self, destination: str) -> Optional[tuple]:
         """
-        Get coordinates for a destination using geocoding
+        Get coordinates for a destination using geocoding (with caching)
         
         Args:
             destination: Destination name (e.g., "Tokyo, Japan")
@@ -49,6 +50,13 @@ class WeatherService:
         Returns:
             Tuple of (latitude, longitude) or None if not found
         """
+        # Check cache first
+        cache_key = f"geocode:{destination.lower()}"
+        cached = weather_cache.get(cache_key)
+        if cached is not None:
+            logger.info(f"Geocoding cache hit for {destination}")
+            return cached
+        
         try:
             # Use Open-Meteo's geocoding API
             geocode_url = "https://geocoding-api.open-meteo.com/v1/search"
@@ -59,13 +67,17 @@ class WeatherService:
                 "format": "json"
             }
             
+            logger.info(f"Geocoding API call for {destination}")
             response = requests.get(geocode_url, params=params, timeout=10)
             response.raise_for_status()
             
             data = response.json()
             if data.get("results"):
                 result = data["results"][0]
-                return (result["latitude"], result["longitude"])
+                coords = (result["latitude"], result["longitude"])
+                # Cache coordinates (longer TTL since they don't change)
+                weather_cache.set(cache_key, coords, ttl_seconds=7*24*60*60)  # 7 days
+                return coords
             
             logger.warning(f"No coordinates found for {destination}")
             return None
@@ -81,7 +93,7 @@ class WeatherService:
         start_date: Optional[datetime] = None
     ) -> List[Dict]:
         """
-        Get simplified weather forecast for destination
+        Get simplified weather forecast for destination (with caching)
         
         Args:
             destination: Destination name
@@ -91,6 +103,16 @@ class WeatherService:
         Returns:
             List of daily weather summaries
         """
+        # Generate cache key
+        if start_date is None:
+            start_date = datetime.now()
+        
+        cache_key = f"forecast:{destination.lower()}:{duration_days}:{start_date.strftime('%Y-%m-%d')}"
+        cached = weather_cache.get(cache_key)
+        if cached is not None:
+            logger.info(f"Weather forecast cache hit for {destination}")
+            return cached
+        
         try:
             # Get coordinates
             coords = self.get_coordinates(destination)
@@ -99,10 +121,6 @@ class WeatherService:
                 return []
             
             latitude, longitude = coords
-            
-            # Set date range
-            if start_date is None:
-                start_date = datetime.now()
             
             end_date = start_date + timedelta(days=duration_days - 1)
             
@@ -116,6 +134,7 @@ class WeatherService:
                 "timezone": "auto"
             }
             
+            logger.info(f"Weather API call for {destination} ({duration_days} days)")
             response = requests.get(self.base_url, params=params, timeout=10)
             response.raise_for_status()
             
@@ -139,6 +158,9 @@ class WeatherService:
                     "is_indoor_preferred": self._is_indoor_preferred(condition)
                 }
                 forecasts.append(forecast)
+            
+            # Cache the result (6 hours TTL)
+            weather_cache.set(cache_key, forecasts, ttl_seconds=WEATHER_CACHE_TTL)
             
             return forecasts
             
