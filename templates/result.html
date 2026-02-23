@@ -49,6 +49,28 @@
     </div>
   </div>
 
+  <!-- Travel Options -->
+  {% if result.travel_options %}
+  <div class="mb-8 p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-xl">
+    <h2 class="text-2xl font-semibold mb-4">✈️ How to Get There</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      {% for option in result.travel_options[:3] %}
+      <div class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition">
+        <div class="text-3xl mb-3">
+          {% if 'Flight' in option.mode or 'Air' in option.mode %}✈️
+          {% elif 'Train' in option.mode %}🚆
+          {% elif 'Bus' in option.mode %}🚌
+          {% else %}🚗{% endif %}
+        </div>
+        <h3 class="font-semibold text-blue-400 mb-2">{{ option.mode }}</h3>
+        <p class="text-sm text-gray-400 mb-3">{{ option.details }}</p>
+        <p class="text-lg font-bold text-green-400">{{ result.currency_symbol }}{{ option.estimated_cost }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Daily Itinerary -->
   <div class="space-y-6">
     {% for day in result.itinerary %}
@@ -146,6 +168,47 @@
         <p class="text-sm text-gray-400 mb-2">{{ hotel.type }}</p>
         <p class="text-lg font-bold text-blue-400">{{ result.currency_symbol }}{{ hotel.price_per_night }}/night</p>
         <p class="text-xs text-gray-500 mt-2">📍 {{ hotel.location }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Key Attractions -->
+  {% if result.key_attractions %}
+  <div class="mt-8 p-6 rounded-2xl bg-gradient-to-r from-yellow-600/20 to-orange-600/20 backdrop-blur-xl border border-white/10 shadow-xl">
+    <h2 class="text-2xl font-semibold mb-4">⭐ Must-See Attractions</h2>
+    <div class="grid md:grid-cols-2 gap-4">
+      {% for attraction in result.key_attractions[:8] %}
+      <div class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition group">
+        <div class="flex items-start gap-3">
+          <span class="text-2xl group-hover:scale-110 transition-transform">🎯</span>
+          <div class="flex-1">
+            <h3 class="font-semibold text-yellow-300 mb-1">{{ attraction.name }}</h3>
+            <p class="text-xs text-orange-300 mb-2">{{ attraction.category }}</p>
+            <p class="text-sm text-gray-400">{{ attraction.description }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Local Beverages -->
+  {% if result.local_beverages %}
+  <div class="mt-8 p-6 rounded-2xl bg-gradient-to-r from-cyan-600/20 to-blue-600/20 backdrop-blur-xl border border-white/10 shadow-xl">
+    <h2 class="text-2xl font-semibold mb-4">🍹 Local Drinks to Try</h2>
+    <div class="grid md:grid-cols-3 gap-4">
+      {% for beverage in result.local_beverages %}
+      <div class="p-4 rounded-xl bg-white/5 hover:bg-white/10 transition">
+        <h3 class="font-semibold text-cyan-300 mb-2">{{ beverage.name }}</h3>
+        <p class="text-sm text-gray-400 mb-3">{{ beverage.description }}</p>
+        <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+          <span>📍</span>
+          <span>{{ beverage.where_to_try }}</span>
+        </div>
+        <p class="text-sm font-semibold text-green-400">{{ result.currency_symbol }}{{ beverage.estimated_cost }}</p>
       </div>
       {% endfor %}
     </div>

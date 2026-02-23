@@ -376,6 +376,7 @@ Please regenerate with:
 - Comfortable transportation (aim for ${request.budget * 0.12:.0f})
 
 TARGET: Use 85-95% of the ${request.budget} budget for an optimized experience.
+AVOID 98-100% utilization as it appears artificially optimized. Aim for 90-95% sweet spot.
 Keep responses concise to avoid truncation.
 """
                     try:
@@ -409,8 +410,10 @@ Keep responses concise to avoid truncation.
                     final_utilization = (total_cost / request.budget) * 100
                     if final_utilization < 75:
                         logger.warning(f"Final budget utilization is low: {final_utilization:.1f}%")
-                    elif final_utilization >= 85:
+                    elif final_utilization >= 85 and final_utilization <= 97:
                         logger.info(f"Optimal budget utilization achieved: {final_utilization:.1f}%")
+                    elif final_utilization > 97:
+                        logger.warning(f"Budget utilization appears artificially high: {final_utilization:.1f}% (may look forced)")
                     
                     return travel_response
                 

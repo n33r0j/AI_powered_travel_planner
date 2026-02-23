@@ -40,3 +40,7 @@ Thumbs.db
 
 # Database
 *.db
+
+# Test outputs
+test_*_response.json
+debug_response_*.txt

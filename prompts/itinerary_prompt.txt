@@ -14,24 +14,54 @@ Generate a detailed travel itinerary based on the following user requirements:
 **Even if the destination uses another currency, you MUST calculate and provide prices in USD equivalents.**
 
 **Requirements:**
-1. The TOTAL estimated cost should be between 85-100% of ${budget} USD
-2. Provide a detailed day-by-day itinerary with specific activities
-3. Include local food recommendations for each day
-4. Suggest 2-3 accommodation options with price ranges
-5. Recommend travel options (flights, trains, local transport) with estimated costs
-6. Break down estimated costs per day realistically
-7. Consider the user's interests when selecting activities
-8. Include specific locations, timings, and practical tips
-9. **IMPORTANT: If weather conditions are provided, adapt activities accordingly:**
+1. The TOTAL estimated cost should be between 85-97% of ${budget} USD (avoid appearing algorithmically optimized at 98-100%)
+2. **Provide comprehensive travel options** to reach the destination:
+   - Include specific airport codes (e.g., "Cochin International Airport (COK)")
+   - List major train stations with names (e.g., "Ernakulam Junction (ERS)", "Ernakulam Town")
+   - Mention bus terminals and interstate routes if applicable
+   - Include ferry routes or water transport if relevant to the destination
+   - Provide taxi/transfer costs from airports/stations to city center
+   - **IMPORTANT: For international destinations, if listing international flights, note: "International flight not included (varies by origin)" with estimated_cost: 0**
+3. **Include a clear list of key attractions** - summarize the main 5-8 must-see places with categories
+4. **Recommend at least 2-3 iconic local beverages** specific to the destination with descriptions and where to try them
+5. Provide a detailed day-by-day itinerary with specific activities
+6. **Activities should be geographically efficient** - minimize backtracking, group nearby attractions together
+7. Include local food recommendations for each day
+8. Suggest 2-3 accommodation options with price ranges
+9. Recommend local transportation options with estimated costs
+10. Break down estimated costs per day realistically
+11. Consider the user's interests when selecting activities
+12. Include specific locations, timings, and practical tips
+13. **IMPORTANT: If weather conditions are provided, adapt activities accordingly:**
    - On rainy/bad weather days: Prioritize indoor activities (museums, temples, shopping malls, covered markets, indoor attractions)
    - On sunny/good weather days: Include outdoor sightseeing, parks, walking tours, outdoor markets
    - Suggest appropriate clothing and transport based on weather
 
+**Pricing Realism Rules:**
+- **Round all prices to natural numbers** - Use $10, $20, $30, $50, $100 instead of $12, $23, $42
+- Small items: Round to nearest $5 ($5, $10, $15, $20)
+- Medium items: Round to nearest $10 ($30, $50, $80, $100)  
+- Large items: Round to nearest $50 or $100 ($150, $200, $500)
+- **Vary prices naturally** - Don't make everything multiples of 10. Mix in $15, $25, $35, $45, $75 for organic feel
+- This makes pricing look authentic and professional
+- Avoid overly precise values like $42.37 or $23.45
+- **Research actual prices** for major attractions (e.g., TeamLab Tokyo ~$30, Tokyo Tower ~$10-15)
+
+**Accommodation Pricing Guidelines:**
+- Research typical prices for the destination
+- Budget hostels: $10-25/night (developing countries), $30-60/night (developed countries)
+- Mid-range hotels: $40-80/night (developing), $80-150/night (developed)
+- Upscale hotels: $100-200/night (developing), $200-400/night (developed)
+- Consider seasonality - tourism season = +30-50% price increase
+- Don't suggest unrealistically low prices (e.g., $6/night in popular tourist areas)
+
 **Budget Optimization Rules:**
-- **GOAL: Use 85-100% of the provided budget for optimal experience**
+- **GOAL: Use 85-97% of the provided budget for optimal experience**
+- **AVOID 98-100% utilization** - this looks artificially optimized. Natural trip planning rarely hits exact budget
+- Target sweet spot: 90-95% utilization
 - If budget is generous ($1000+), suggest higher-quality accommodations, premium activities, and better dining options
 - Calculate each category accurately based on actual planned expenses
-- accommodation_total: Aim for 40-50% of budget - suggest mid-range to upscale hotels if budget allows
+- accommodation_total: Aim for 40-50% of budget - suggest mid-range to upscale hotels if budget allows, use realistic pricing
 - transportation_total: 10-15% of budget - include comfortable options (airport transfers, day passes)
 - **activities_total: Aim for 20-30% of budget** - include paid attractions, premium experiences, tours, workshops, unique activities
   * For budgets $1000-2000: Include 3-5 paid activities per day
@@ -58,6 +88,28 @@ Return this exact structure:
   "duration": {duration},
   "estimated_total_cost": 0,
   "currency": "USD",
+  "travel_options": [
+    {{
+      "mode": "Flight/Train/Bus",
+      "details": "Specific airport, station, or terminal name",
+      "estimated_cost": 0
+    }}
+  ],
+  "key_attractions": [
+    {{
+      "name": "Attraction Name",
+      "description": "Brief description of what makes it special",
+      "category": "Historical/Cultural/Natural/Entertainment"
+    }}
+  ],
+  "local_beverages": [
+    {{
+      "name": "Beverage Name",
+      "description": "What it is and why it's iconic to this region",
+      "where_to_try": "Specific location or type of venue",
+      "estimated_cost": 0
+    }}
+  ],
   "itinerary": [
     {{
       "day": 1,
@@ -117,27 +169,41 @@ Return this exact structure:
   }},
   "travel_tips": [
     "Practical tip 1",
-    "Practical tip 2"
+    "Practical tip 2",
+    "Practical tip 3",
+    "Note: Prices are approximate and may vary by season, day of week, and booking time"
   ]
 }}
 
+**CRITICAL REMINDERS:**
+1. **Travel Options**: Must include at least 2-3 options with specific codes/names (airports, train stations, ferry terminals)
+2. **International Flights**: If destination requires international flight, set cost to 0 and note "International flight not included (varies by origin)"
+3. **Pricing**: Round ALL prices to natural numbers ($10, $20, $50, not $12, $23, $42) but vary them ($15, $25, $45 for organic feel)
+4. **Accommodations**: Use realistic price ranges for the destination and season
+5. **Budget Target**: Aim for 85-97% utilization (sweet spot: 90-95%). AVOID 98-100% as it looks artificial
+6. **Geographical Efficiency**: Group nearby attractions, minimize backtracking between locations
+7. **Travel Tips**: Provide practical, actionable advice (best time to visit, local customs, safety tips, transportation hacks)
+   - Avoid referencing specific budget numbers in tips (e.g., don't say "with your $X budget" - keep tips general and useful)
+   - Focus on: local customs, safety, best times, transportation tips, cultural insights
+   - Always include price disclaimer: "Prices are approximate and may vary by season"
+
 **Example Budget Breakdown Calculation (3 days, $1500 budget):**
-TARGET: Use 85-100% of $1500 = aim for $1275-1500
+TARGET: Use 85-97% of $1500 = aim for $1275-1455 (sweet spot: $1350-1425 or 90-95%)
 
 Option A - Budget-Conscious ($900):
 - accommodation_total: $60/night × 3 nights = $180
 - transportation_total: $30 airport + ($10/day × 3) = $60
 - activities_total: $20 + $30 + $25 = $75 (Only 8% - TOO LOW)
 - food_total: ($15 + $20 + $25) × 3 = $180
-- miscellaneous: ($180 + $60 + $75 + $180) × 0.08 = $42
-- Total: $537 ❌ Only 36% of budget - TOO LOW, Activities underutilized
+- miscellaneous: $40 (rounded from 8%)
+- Total: $535 ❌ Only 36% of budget - TOO LOW, Activities underutilized
 
-Option B - Optimized Experience ($1350): ✅
+Option B - Optimized Experience ($1395): ✅
 - accommodation_total: $120/night × 3 nights = $360 (40%)
 - transportation_total: $80 airport + ($20/day × 3) = $140 (10%)
-- **activities_total: $50 + $80 + $100 + $120 = $350 (26%)** ✅ PERFECT - Includes TeamLab, Tea Ceremony, Rickshaw, Observation Deck
-- food_total: ($25 + $40 + $60) × 3 = $375 (28%)
-- miscellaneous: ($360 + $140 + $350 + $375) × 0.06 = $75 (6%)
-- Total: $1300 ✅ 87% of budget - OPTIMAL
+- **activities_total: $50 + $75 + $100 + $120 = $345 (25%)** ✅ PERFECT - Includes TeamLab, Tea Ceremony, Rickshaw, Observation Deck (varied rounded prices)
+- food_total: ($25 + $40 + $60) × 3 = $375 (27%)
+- miscellaneous: $75 (5% - rounded)
+- Total: $1395 ✅ 93% of budget - OPTIMAL (natural utilization, not forced at 99%)
 
-**Key Principle:** Match quality to budget. If user gives $1500, don't plan a $500 trip - plan a $1300 trip with better hotels, **premium activities** (cooking classes, private tours, unique experiences), and quality dining.
+**Key Principle:** Match quality to budget. If user gives $1500, don't plan a $500 trip - plan a $1350-1400 trip with better hotels, **premium activities** (cooking classes, private tours, unique experiences), and quality dining. **Always round prices to natural numbers for professional presentation. Aim for 90-95% budget use for organic feel.**

@@ -99,6 +99,28 @@ class Accommodation(BaseModel):
     amenities: List[str]
 
 
+class TravelOption(BaseModel):
+    """Travel option to reach destination"""
+    mode: str = Field(..., description="Transportation mode (Flight/Train/Bus)")
+    details: str = Field(..., description="Specific details (airport, station, route)")
+    estimated_cost: float = Field(..., description="Estimated cost in specified currency")
+
+
+class KeyAttraction(BaseModel):
+    """Key attraction or landmark"""
+    name: str = Field(..., description="Attraction name")
+    description: str = Field(..., description="Brief description")
+    category: str = Field(..., description="Category (Historical/Cultural/Natural/Entertainment)")
+
+
+class LocalBeverage(BaseModel):
+    """Local beverage recommendation"""
+    name: str = Field(..., description="Beverage name")
+    description: str = Field(..., description="Description and cultural significance")
+    where_to_try: str = Field(..., description="Where to find it")
+    estimated_cost: float = Field(..., description="Approximate cost")
+
+
 class TransportationOption(BaseModel):
     """Transportation option details"""
     mode: str
@@ -128,6 +150,9 @@ class TravelResponse(BaseModel):
     duration: int
     estimated_total_cost: float
     currency: str = "USD"
+    travel_options: List[TravelOption] = Field(default_factory=list)
+    key_attractions: List[KeyAttraction] = Field(default_factory=list)
+    local_beverages: List[LocalBeverage] = Field(default_factory=list)
     itinerary: List[DayItinerary]
     accommodation_suggestions: List[Accommodation]
     transportation: Transportation
