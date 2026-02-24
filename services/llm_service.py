@@ -243,7 +243,8 @@ class LLMService:
             )
             
             # Call Gemini API
-            logger.info(f"Gemini API call for {request.destination} ({request.duration_days}d, ${request.budget})")
+            currency_symbol = "₹" if request.currency == "INR" else "$"
+            logger.info(f"Gemini API call for {request.destination} ({request.duration_days}d, {currency_symbol}{request.budget} {request.currency})")
             response = self.client.models.generate_content(
                 model=self.model_name,
                 contents=contents,

@@ -239,20 +239,30 @@ async def generate_ui(
         original_currency = currency.upper()
         original_budget = budget
         
-        # Convert budget to USD for internal processing
-        budget_usd = currency_converter.convert_to_usd(budget, original_currency)
+        # HYBRID APPROACH: Use native INR for Indian destinations, USD for others
+        if original_currency == "INR" and currency_converter.is_indian_destination(destination):
+            # Keep INR for authentic Indian pricing
+            processing_budget = budget
+            processing_currency = "INR"
+            logger.info(
+                f"UI request: {destination}, {duration_days} days, "
+                f"₹{original_budget} INR (using native currency)"
+            )
+        else:
+            # Convert to USD for international destinations
+            processing_budget = int(currency_converter.convert_to_usd(budget, original_currency))
+            processing_currency = "USD"
+            logger.info(
+                f"UI request: {destination}, {duration_days} days, "
+                f"{original_budget} {original_currency} (≈${processing_budget} USD)"
+            )
         
-        logger.info(
-            f"UI request: {destination}, {duration_days} days, "
-            f"{original_budget} {original_currency} (≈${budget_usd} USD)"
-        )
-        
-        # Create TravelRequest object with USD budget
+        # Create TravelRequest object
         travel_request = TravelRequest(
             destination=destination,
             duration_days=duration_days,
-            budget=int(budget_usd),
-            currency="USD",  # Internal processing in USD
+            budget=processing_budget,
+            currency=processing_currency,
             interests=interest_list,
             weather_aware=weather_aware_bool
         )
@@ -301,27 +311,35 @@ async def generate_ui(
         # Prepare data for template - convert all prices to display currency
         result_data = response.model_dump()
         
-        if original_currency != "USD":
-            # Convert all monetary values in the response to display currency
-            result_data = convert_response_currency(result_data, "USD", original_currency)
+        # Only convert if processing currency differs from display currency
+        if processing_currency != original_currency:
+            # Convert all monetary values to display currency
+            result_data = convert_response_currency(result_data, processing_currency, original_currency)
             
             # Convert budget breakdown
             for key in budget_summary['breakdown']:
-                budget_summary['breakdown'][key] = round(
-                    currency_converter.convert_from_usd(
-                        budget_summary['breakdown'][key], 
-                        original_currency
+                if processing_currency == "USD":
+                    budget_summary['breakdown'][key] = round(
+                        currency_converter.convert_from_usd(
+                            budget_summary['breakdown'][key], 
+                            original_currency
+                        )
                     )
-                )
+                # If processing in INR already, no conversion needed
             
-            estimated_cost_converted = currency_converter.convert_from_usd(
-                budget_summary['estimated_total_cost'],
-                original_currency
-            )
-            remaining_budget_converted = currency_converter.convert_from_usd(
-                budget_summary['remaining_budget'],
-                original_currency
-            )
+            if processing_currency == "USD":
+                estimated_cost_converted = currency_converter.convert_from_usd(
+                    budget_summary['estimated_total_cost'],
+                    original_currency
+                )
+                remaining_budget_converted = currency_converter.convert_from_usd(
+                    budget_summary['remaining_budget'],
+                    original_currency
+                )
+            else:
+                # Already in target currency
+                estimated_cost_converted = budget_summary['estimated_total_cost']
+                remaining_budget_converted = budget_summary['remaining_budget']
         else:
             estimated_cost_converted = budget_summary['estimated_total_cost']
             remaining_budget_converted = budget_summary['remaining_budget']
@@ -420,26 +438,50 @@ async def generate_itinerary(request: TravelRequest, db: Session = Depends(get_d
     Generate a comprehensive travel itinerary
     
     **Request Body:**
-    - destination: Target destination (e.g., "Tokyo, Japan")
+    - destination: Target destination (e.g., "Tokyo, Japan" or "Kochi, India")
     - duration_days: Number of days (1-30)
-    - budget: Total budget in USD
+    - budget: Total budget (in specified currency)
+    - currency: Currency code (USD or INR)
     - interests: List of interests (e.g., ["culture", "food", "adventure"])
     - weather_aware: Include weather forecast (default: True)
     
     **Returns:**
-    - Complete itinerary with day-by-day activities
+    - Complete itinerary in requested currency
     - Accommodation suggestions
     - Transportation options
     - Budget breakdown
     - Travel tips
     - Weather-adapted activities (if enabled)
+    
+    **Note:** For Indian destinations with INR, prices use native authentic pricing.
     """
     try:
-        logger.info(
-            f"Generating itinerary for {request.destination}, "
-            f"{request.duration_days} days, ${request.budget}, "
-            f"weather_aware={request.weather_aware}"
-        )
+        # HYBRID APPROACH: Use native currency for Indian destinations
+        original_currency = request.currency
+        if request.currency == "INR" and currency_converter.is_indian_destination(request.destination):
+            # Keep INR for authentic pricing
+            logger.info(
+                f"Generating itinerary for {request.destination}, "
+                f"{request.duration_days} days, ₹{request.budget} INR (native), "
+                f"weather_aware={request.weather_aware}"
+            )
+        else:
+            # Convert to USD if needed
+            if request.currency != "USD":
+                original_budget = request.budget
+                request.budget = int(currency_converter.convert_to_usd(request.budget, request.currency))
+                request.currency = "USD"
+                logger.info(
+                    f"Generating itinerary for {request.destination}, "
+                    f"{request.duration_days} days, ${request.budget} USD (from {original_currency} {original_budget}), "
+                    f"weather_aware={request.weather_aware}"
+                )
+            else:
+                logger.info(
+                    f"Generating itinerary for {request.destination}, "
+                    f"{request.duration_days} days, ${request.budget} USD, "
+                    f"weather_aware={request.weather_aware}"
+                )
         
         # Get weather context if enabled
         weather_context = ""

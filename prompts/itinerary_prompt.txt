@@ -5,16 +5,19 @@ Generate a detailed travel itinerary based on the following user requirements:
 **User Details:**
 - Destination: {destination}
 - Duration: {duration} days
-- Budget: ${budget} USD
+- Budget: {budget}
 - Interests: {interests}
 
 {weather_context}
 
-**CRITICAL: ALL prices must be in USD ($). Do NOT use any other currency symbols (₹, €, £, etc.).**
-**Even if the destination uses another currency, you MUST calculate and provide prices in USD equivalents.**
+**CRITICAL PRICING INSTRUCTIONS:**
+**The budget is provided in a specific currency. You MUST return ALL prices in THE SAME CURRENCY as the budget.**
+**If budget contains $ → return all prices in USD ($)**
+**If budget contains ₹ → return all prices in INR (₹)**
+**Match the currency symbol and use authentic local prices for that currency.**
 
 **Requirements:**
-1. The TOTAL estimated cost should be between 85-97% of ${budget} USD (avoid appearing algorithmically optimized at 98-100%)
+1. The TOTAL estimated cost should be between 85-97% of the provided budget (avoid appearing algorithmically optimized at 98-100%)
 2. **Provide comprehensive travel options** to reach the destination:
    - Include specific airport codes (e.g., "Cochin International Airport (COK)")
    - List major train stations with names (e.g., "Ernakulam Junction (ERS)", "Ernakulam Town")
@@ -33,27 +36,68 @@ Generate a detailed travel itinerary based on the following user requirements:
 11. Consider the user's interests when selecting activities
 12. Include specific locations, timings, and practical tips
 13. **IMPORTANT: If weather conditions are provided, adapt activities accordingly:**
-   - On rainy/bad weather days: Prioritize indoor activities (museums, temples, shopping malls, covered markets, indoor attractions)
+   - **On rainy/bad weather days**: Prioritize indoor activities but NEVER suggest "relax at hostel" - Always provide substantive alternatives:
+     * Museums (art, history, cultural, science)
+     * Indoor temples, churches, synagogues, religious sites
+     * Shopping malls, covered markets, bazaars
+     * Art galleries, cultural centers
+     * Cooking classes, workshops, demonstrations
+     * Spice warehouses, tea/coffee tasting experiences
+     * Indoor shows (theater, dance performances, movies)
+     * Libraries, reading rooms, co-working cafes
+     * Spa, wellness centers, massage
+     * Food tours in covered areas, restaurant hopping
    - On sunny/good weather days: Include outdoor sightseeing, parks, walking tours, outdoor markets
    - Suggest appropriate clothing and transport based on weather
+   - **Never use "Relax at hostel/hotel" as a primary activity** - travelers want experiences, not downtime
 
 **Pricing Realism Rules:**
-- **Round all prices to natural numbers** - Use $10, $20, $30, $50, $100 instead of $12, $23, $42
-- Small items: Round to nearest $5 ($5, $10, $15, $20)
-- Medium items: Round to nearest $10 ($30, $50, $80, $100)  
-- Large items: Round to nearest $50 or $100 ($150, $200, $500)
-- **Vary prices naturally** - Don't make everything multiples of 10. Mix in $15, $25, $35, $45, $75 for organic feel
-- This makes pricing look authentic and professional
-- Avoid overly precise values like $42.37 or $23.45
-- **Research actual prices** for major attractions (e.g., TeamLab Tokyo ~$30, Tokyo Tower ~$10-15)
+- **CRITICAL: VARY ALL PRICES** - Never use the same price repeatedly (e.g., avoid $1, $1, $1, $1 or ₹100, ₹100, ₹100)
+- **Generate diverse amounts based on currency**:
+  * **For USD**: Mix $1, $2, $3, $5, $7, $10, $12, $15, $18, $20, $25, $30, $40, $50
+  * **For INR**: Mix ₹50, ₹100, ₹150, ₹200, ₹300, ₹500, ₹750, ₹1000, ₹1500, ₹2000
+- Small items:
+  * USD: $1-5 (tea $2, entry $1, snacks $3)
+  * INR: ₹20-100 (chai ₹20, entry ₹50, snacks ₹80)
+- Medium items:
+  * USD: $5-20 (meals $8, $12, $15, activities $10, $18)
+  * INR: ₹100-500 (meals ₹150, ₹250, ₹400, activities ₹300, ₹450)
+- Large items:
+  * USD: $20+ (tours $25, $40, accommodation $50, $75, $100)
+  * INR: ₹500+ (tours ₹800, ₹1200, accommodation ₹1500, ₹2500)
+- **Authenticity > Uniformity**: Real prices vary naturally
+- **Research actual destination prices** and use authentic local currency amounts
+- Example good variation (INR): Breakfast ₹80, Lunch ₹250, Palace ₹50, Synagogue ₹20, Dinner ₹400, Auto ₹150
+- Example good variation (USD): Breakfast $3, Lunch $8, Museum $5, Train $2, Dinner $15, Taxi $6
+- Example BAD (avoid): Tea ₹100, Entry ₹100, Drinks ₹100, Lunch ₹100 ❌
 
 **Accommodation Pricing Guidelines:**
-- Research typical prices for the destination
-- Budget hostels: $10-25/night (developing countries), $30-60/night (developed countries)
-- Mid-range hotels: $40-80/night (developing), $80-150/night (developed)
-- Upscale hotels: $100-200/night (developing), $200-400/night (developed)
-- Consider seasonality - tourism season = +30-50% price increase
-- Don't suggest unrealistically low prices (e.g., $6/night in popular tourist areas)
+- Research typical prices for the destination and season
+- **For USD (International/Western destinations)**:
+  * Budget hostels: $30-60/night (developed countries), $10-15/night (developing)
+  * Mid-range hotels: $80-150/night (developed), $40-80/night (developing)
+  * Upscale hotels: $200-400/night (developed), $100-200/night (developing)
+- **For INR (Indian destinations)**:
+  * Budget hostels/guesthouses: ₹700-1200/night (tourist areas), ₹400-700/night (off-season)
+  * Popular backpacker hostels (Zostel, etc.): ₹600-1000/night (dorms, peak season)
+  * Mid-range hotels: ₹1500-3000/night (3-star hotels in cities)
+  * Upscale hotels: ₹4000-8000/night (4-5 star hotels)
+- Consider seasonality: tourism season = +30-50% price, monsoon/off-season = -20-30%
+- Price varies by room type: Dorm < Private room < Ensuite < AC room
+
+**Transportation Cost Guidelines:**
+- **Budget realistic daily transport costs** for the destination:
+  * **India (INR)**: ₹200-500 per day for local transport, ₹400-800 for 2 days total
+    - Auto-rickshaws: ₹50-150 per short ride, ₹200-400 per longer ride
+    - Ferries (coastal areas): ₹20-80 per crossing
+    - Local buses: ₹10-50 per ride
+    - Day passes (metro): ₹150-300
+  * **International/USD**: $3-6 per day (developing), $10-20 per day (developed)
+    - Taxis/transfers: $5-15 (developing), $20-50 (developed)
+    - Public transport: $2-5 per day
+- **IMPORTANT**: Multi-day trips need cumulative transport costs (2 days = 2× daily cost)
+- Include ferry costs explicitly if destination has water transport
+- Factor in multiple daily trips (breakfast → attraction → lunch → attraction → hotel)
 
 **Budget Optimization Rules:**
 - **GOAL: Use 85-97% of the provided budget for optimal experience**
@@ -87,7 +131,7 @@ Return this exact structure:
   "destination": "{destination}",
   "duration": {duration},
   "estimated_total_cost": 0,
-  "currency": "USD",
+  "currency": "USD or INR (match the budget currency)",
   "travel_options": [
     {{
       "mode": "Flight/Train/Bus",
@@ -176,34 +220,36 @@ Return this exact structure:
 }}
 
 **CRITICAL REMINDERS:**
-1. **Travel Options**: Must include at least 2-3 options with specific codes/names (airports, train stations, ferry terminals)
-2. **International Flights**: If destination requires international flight, set cost to 0 and note "International flight not included (varies by origin)"
-3. **Pricing**: Round ALL prices to natural numbers ($10, $20, $50, not $12, $23, $42) but vary them ($15, $25, $45 for organic feel)
-4. **Accommodations**: Use realistic price ranges for the destination and season
-5. **Budget Target**: Aim for 85-97% utilization (sweet spot: 90-95%). AVOID 98-100% as it looks artificial
-6. **Geographical Efficiency**: Group nearby attractions, minimize backtracking between locations
-7. **Travel Tips**: Provide practical, actionable advice (best time to visit, local customs, safety tips, transportation hacks)
+1. **Currency Matching**: Return ALL prices in THE SAME CURRENCY as the budget provided
+2. **Travel Options**: Must include at least 2-3 options with specific codes/names (airports, train stations, ferry terminals)
+3. **International Flights**: If destination requires international flight, set cost to 0 and note "International flight not included (varies by origin)"
+4. **Pricing Variance**: Vary ALL prices naturally - never repeat the same amount (avoid ₹100, ₹100, ₹100)
+5. **Accommodations**: Use realistic authentic prices for the destination and season
+6. **Budget Target**: Aim for 85-97% utilization (sweet spot: 90-95%). AVOID 98-100% as it looks artificial
+7. **Geographical Efficiency**: Group nearby attractions, minimize backtracking between locations
+8. **Travel Tips**: Provide practical, actionable advice (best time to visit, local customs, safety tips, transportation hacks)
    - Avoid referencing specific budget numbers in tips (e.g., don't say "with your $X budget" - keep tips general and useful)
    - Focus on: local customs, safety, best times, transportation tips, cultural insights
    - Always include price disclaimer: "Prices are approximate and may vary by season"
 
-**Example Budget Breakdown Calculation (3 days, $1500 budget):**
-TARGET: Use 85-97% of $1500 = aim for $1275-1455 (sweet spot: $1350-1425 or 90-95%)
+**Example Budget Breakdown Calculation:**
 
-Option A - Budget-Conscious ($900):
-- accommodation_total: $60/night × 3 nights = $180
-- transportation_total: $30 airport + ($10/day × 3) = $60
-- activities_total: $20 + $30 + $25 = $75 (Only 8% - TOO LOW)
-- food_total: ($15 + $20 + $25) × 3 = $180
-- miscellaneous: $40 (rounded from 8%)
-- Total: $535 ❌ Only 36% of budget - TOO LOW, Activities underutilized
-
-Option B - Optimized Experience ($1395): ✅
+**Example A: USD Budget ($1500 for 3 days):**
+TARGET: Use 85-97% = aim for $1275-1455 (sweet spot: $1350-1425 or 90-95%)
 - accommodation_total: $120/night × 3 nights = $360 (40%)
 - transportation_total: $80 airport + ($20/day × 3) = $140 (10%)
-- **activities_total: $50 + $75 + $100 + $120 = $345 (25%)** ✅ PERFECT - Includes TeamLab, Tea Ceremony, Rickshaw, Observation Deck (varied rounded prices)
+- activities_total: $50 + $75 + $100 + $120 = $345 (25%)
 - food_total: ($25 + $40 + $60) × 3 = $375 (27%)
-- miscellaneous: $75 (5% - rounded)
-- Total: $1395 ✅ 93% of budget - OPTIMAL (natural utilization, not forced at 99%)
+- miscellaneous: $75 (5%)
+- Total: $1395 ✅ 93% of budget - OPTIMAL
 
-**Key Principle:** Match quality to budget. If user gives $1500, don't plan a $500 trip - plan a $1350-1400 trip with better hotels, **premium activities** (cooking classes, private tours, unique experiences), and quality dining. **Always round prices to natural numbers for professional presentation. Aim for 90-95% budget use for organic feel.**
+**Example B: INR Budget (₹7000 for 2 days - Kochi):**
+TARGET: Use 85-97% = aim for ₹5950-6790 (sweet spot: ₹6300-6650 or 90-95%)
+- accommodation_total: ₹900/night × 2 nights = ₹1800 (26%)
+- transportation_total: ₹500 (ferries, autos, buses over 2 days) (7%)
+- activities_total: ₹50 + ₹200 + ₹0 + ₹150 + ₹300 = ₹700 (10%)
+- food_total: (₹80 + ₹250 + ₹400) × 2 = ₹1460 (21%)
+- miscellaneous: ₹350 (5%)
+- Total: ₹6310 ✅ 90% of budget - OPTIMAL
+
+**Key Principle:** Match quality to budget. Use authentic local prices in the native currency for realistic planning.
