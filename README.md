@@ -571,7 +571,71 @@ Built with ❤️ by an AI enthusiast
 
 ---
 
-## 🙏 Acknowledgments
+## � Deployment to Render
+
+This application can be deployed to Render.com for free hosting with automatic HTTPS.
+
+### Prerequisites
+- GitHub account connected to Render
+- Gemini API key from [Google AI Studio](https://aistudio.google.com/)
+
+### Deployment Steps
+
+1. **Push to GitHub** (if not already done)
+   ```bash
+   git add .
+   git commit -m "Prepare for Render deployment"
+   git push origin main
+   ```
+
+2. **Create Render Account**
+   - Go to [render.com](https://render.com)
+   - Sign up with GitHub
+
+3. **Create New Web Service**
+   - Click **New +** → **Web Service**
+   - Connect your GitHub repository: `AI_powered_travel_planner`
+
+4. **Configure Service**
+   - **Name**: `ai-travel-planner` (or your preferred name)
+   - **Region**: Select closest to your location (Singapore for Asia)
+   - **Branch**: `main`
+   - **Runtime**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn main:app --host 0.0.0.0 --port 10000`
+
+5. **Add Environment Variables**
+   - Click **Environment** tab
+   - Add `GEMINI_API_KEY` with your actual API key
+
+6. **Deploy**
+   - Click **Create Web Service**
+   - Wait 2-5 minutes for deployment
+   - You'll get a public URL like: `https://ai-travel-planner.onrender.com`
+
+7. **Test Your Deployment**
+   - Visit: `https://your-url.onrender.com/docs`
+   - Test the API endpoints via Swagger UI
+   - Access the web interface at: `https://your-url.onrender.com`
+
+### Important Notes
+
+⚠️ **SQLite on Render Free Tier**
+- The file system may reset after periods of inactivity
+- For production use, consider upgrading to PostgreSQL
+- For demo purposes, SQLite works fine
+
+⏱️ **Cold Start**
+- Free tier services sleep after 15 minutes of inactivity
+- First request after sleep may take 20-30 seconds
+
+📊 **Monitoring**
+- View logs in Render dashboard
+- Monitor API usage in Gemini console
+
+---
+
+## �🙏 Acknowledgments
 
 - Google Gemini for AI capabilities
 - FastAPI for the excellent framework
