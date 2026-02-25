@@ -1,4 +1,4 @@
-# 🌍 AI-Powered Travel Planner
+# AI-Powered Travel Planner
 
 > A production-ready, stateful travel planning microservice that generates personalized, budget-constrained itineraries using Google Gemini AI with real-time weather adaptation and persistent storage
 
@@ -10,23 +10,23 @@
 
 ---
 
-## 🎯 Project Overview
+## Project Overview
 
 This is a **production-ready AI microservice** that combines LLM reasoning with real-time data and persistent storage to create realistic, geographically accurate travel itineraries with automatic budget validation. Built with modern software engineering practices to demonstrate full-stack AI engineering capabilities.
 
-### ✨ Key Features
+### Key Features
 
-- 💾 **Persistent Storage**: SQLAlchemy ORM with SQLite for trip history and retrieval
-- 🌤️ **Weather-Aware Planning**: Integrates live weather forecasts to adapt activities (indoor vs outdoor)
-- 🤖 **AI-Powered Planning**: Uses Google Gemini 2.5 Flash for intelligent itinerary generation
-- 💰 **Budget Validation**: Automatic cost calculation with retry logic if budget exceeded
-- 📊 **Structured Output**: Fully validated JSON responses with Pydantic models
-- 🔄 **Full CRUD Operations**: Create, retrieve, list, and delete trips via RESTful API
-- 📝 **Auto-Documentation**: Interactive Swagger UI and ReDoc included
-- 🏗️ **Clean Architecture**: Modular design with separation of concerns
-- ⚡ **Fast & Async**: Built on FastAPI for high performance
+- **Persistent Storage**: SQLAlchemy ORM with SQLite for trip history and retrieval
+- **Weather-Aware Planning**: Integrates live weather forecasts to adapt activities (indoor vs outdoor)
+- **AI-Powered Planning**: Uses Google Gemini 2.5 Flash for intelligent itinerary generation
+- **Budget Validation**: Automatic cost calculation with retry logic if budget exceeded
+- **Structured Output**: Fully validated JSON responses with Pydantic models
+- **Full CRUD Operations**: Create, retrieve, list, and delete trips via RESTful API
+- **Auto-Documentation**: Interactive Swagger UI and ReDoc included
+- **Clean Architecture**: Modular design with separation of concerns
+- **Fast & Async**: Built on FastAPI for high performance
 
-### 🧠 What Makes This Different
+### What Makes This Different
 
 **This is NOT just an LLM wrapper.** It's a stateful AI microservice that:
 - Stores generated itineraries with unique trip IDs
@@ -40,15 +40,15 @@ Example: On rainy days → prioritizes museums, temples, covered markets
 On sunny days → includes parks, outdoor tours, walking experiences
 
 **Architecture demonstrates:**
-✅ AI integration  
-✅ External API orchestration  
-✅ Data persistence (ORM)  
-✅ RESTful design  
-✅ Production thinking
+- AI integration
+- External API orchestration
+- Data persistence (ORM)
+- RESTful design
+- Production thinking
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ```bash
 # 1. Clone & Install
@@ -71,7 +71,7 @@ Visit **http://localhost:8000/docs** for interactive API documentation!
 
 ---
 
-## 🏛️ Architecture
+## Architecture
 
 ```
 User Request
@@ -105,7 +105,7 @@ Retry with Budget Constraint (max 2 retries)
 - Database stores trip history
 - System orchestrates all components
 
-### 📂 Project Structure
+### Project Structure
 
 ```
 travel_planner_ai/
@@ -140,7 +140,7 @@ travel_planner_ai/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -192,7 +192,7 @@ The API will be available at: **http://localhost:8000**
 
 ---
 
-## 📖 API Usage
+## API Usage
 
 ### Interactive Documentation
 
@@ -328,7 +328,7 @@ curl -X POST "http://localhost:8000/generate-itinerary" \
 
 ---
 
-## 🌤️ Weather-Aware Planning
+## Weather-Aware Planning
 
 ### How It Works
 
@@ -360,8 +360,8 @@ python demo_weather.py
 ```
 
 This generates TWO itineraries for comparison:
-- 🔵 Standard (no weather context)
-- 🌤️ Weather-Aware (with forecast)
+- Standard (no weather context)
+- Weather-Aware (with forecast)
 
 You'll see how activities change based on weather! Save results to `weather_comparison.json`.
 
@@ -387,7 +387,7 @@ Compare the `activities` in both responses!
 
 ---
 
-## 🧠 Technical Highlights
+## Technical Highlights
 
 ### 1. **Weather-Aware Context Augmentation**
 - Real-time weather API integration (Open-Meteo - free, no key needed)
@@ -435,43 +435,43 @@ Compare the `activities` in both responses!
 
 ---
 
-## 🎓 Skills Demonstrated
+## Skills Demonstrated
 
 This project showcases:
 
-✅ **AI Engineering**
+**AI Engineering**
 - LLM integration and prompt design
 - Context augmentation with external data
 - Structured output parsing
 - Post-processing validation
 - **Hybrid AI orchestration** (LLM + Real-time data)
 
-✅ **API Integration**
+**API Integration**
 - Google Gemini AI API
 - Open-Meteo Weather API
 - Geocoding services
 - Error handling across multiple APIs
 
-✅ **Backend Development**
+**Backend Development**
 - RESTful API design with FastAPI
 - Request/response validation
 - Error handling and logging
 
-✅ **Software Architecture**
+**Software Architecture**
 - Clean code principles
 - Separation of concerns
 - Modular design patterns
 
-✅ **Production Readiness**
+**Production Readiness**
 - Environment configuration
 - Comprehensive documentation
 - Error handling strategy
 
 ---
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
-- [x] **Weather API Integration**: ✅ IMPLEMENTED - Adjusts activities based on forecast
+- [x] **Weather API Integration**: IMPLEMENTED - Adjusts activities based on forecast
 - [ ] **Real-time Pricing**: Integrate flight/hotel APIs for live prices
 - [ ] **User Preferences**: Save/load user profiles
 - [ ] **Multi-city Planning**: Support complex itineraries
@@ -484,7 +484,7 @@ This project showcases:
 
 ---
 
-## 📊 Example Use Cases
+## Example Use Cases
 
 ### Budget Backpacking
 ```json
@@ -516,11 +516,11 @@ This project showcases:
 }
 ```
 
-**💡 Tip**: See [tokyo_trip.json](tokyo_trip.json) for a complete example of generated output!
+**Tip**: See [tokyo_trip.json](tokyo_trip.json) for a complete example of generated output!
 
 ---
 
-## 🛠️ Development
+## Development
 
 ### Running Tests
 ```bash
@@ -559,19 +559,19 @@ flake8 .
 
 ---
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 👨‍💻 Author
+## Author
 
-Built with ❤️ by an AI enthusiast
+Built with care by an AI enthusiast
 
 ---
 
-## � Deployment to Render
+## Deployment to Render
 
 This application can be deployed to Render.com for free hosting with automatic HTTPS.
 
@@ -620,22 +620,22 @@ This application can be deployed to Render.com for free hosting with automatic H
 
 ### Important Notes
 
-⚠️ **SQLite on Render Free Tier**
+**SQLite on Render Free Tier**
 - The file system may reset after periods of inactivity
 - For production use, consider upgrading to PostgreSQL
 - For demo purposes, SQLite works fine
 
-⏱️ **Cold Start**
+**Cold Start**
 - Free tier services sleep after 15 minutes of inactivity
 - First request after sleep may take 20-30 seconds
 
-📊 **Monitoring**
+**Monitoring**
 - View logs in Render dashboard
 - Monitor API usage in Gemini console
 
 ---
 
-## �🙏 Acknowledgments
+## Acknowledgments
 
 - Google Gemini for AI capabilities
 - FastAPI for the excellent framework
@@ -643,10 +643,10 @@ This application can be deployed to Render.com for free hosting with automatic H
 
 ---
 
-## 📞 Contributing
+## Contributing
 
 Contributions, issues, and feature requests are welcome!
 
 ---
 
-**⭐ If you find this project helpful, please give it a star!**
+**If you find this project helpful, please give it a star!**
