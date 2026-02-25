@@ -88,7 +88,7 @@ rate_limiter = RateLimitMiddleware(requests_per_minute=20)
 async def rate_limit_middleware(request: Request, call_next):
     """Apply rate limiting to API endpoints"""
     # Skip rate limiting for health, docs, and static pages
-    if request.url.path in ["/", "/health", "/docs", "/redoc", "/openapi.json", "/stats"]:
+    if request.url.path in ["/", "/generate-ui", "/health", "/docs", "/redoc", "/openapi.json", "/stats"]:
         return await call_next(request)
     
     client_ip = request.client.host if request.client else "unknown"
@@ -206,6 +206,12 @@ def convert_response_currency(data: dict, from_currency: str, to_currency: str) 
     
     convert_recursive(converted_data)
     return converted_data
+
+
+@app.get("/generate-ui", response_class=HTMLResponse, tags=["UI"])
+async def get_generate_ui_form(request: Request):
+    """Serve the travel planning form"""
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
 @app.post("/generate-ui", response_class=HTMLResponse, tags=["UI"])
