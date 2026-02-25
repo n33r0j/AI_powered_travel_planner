@@ -2,7 +2,7 @@
 
 > A production-ready, stateful travel planning microservice that generates personalized, budget-constrained itineraries using Google Gemini AI with real-time weather adaptation and persistent storage
 
-**[🚀 Live Demo](https://ai-travel-planner-7noz.onrender.com/generate-ui)** | **[📚 API Docs](https://ai-travel-planner-7noz.onrender.com/docs)**
+**[Live Demo](https://ai-travel-planner-7noz.onrender.com/generate-ui)** | **[API Docs](https://ai-travel-planner-7noz.onrender.com/docs)**
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109.0-009688?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
