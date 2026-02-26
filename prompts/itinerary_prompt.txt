@@ -228,8 +228,9 @@ Return this exact structure:
 6. **Budget Target**: Aim for 85-97% utilization (sweet spot: 90-95%). AVOID 98-100% as it looks artificial
 7. **Geographical Efficiency**: Group nearby attractions, minimize backtracking between locations
 8. **Travel Tips**: Provide practical, actionable advice (best time to visit, local customs, safety tips, transportation hacks)
-   - Avoid referencing specific budget numbers in tips (e.g., don't say "with your $X budget" - keep tips general and useful)
-   - Focus on: local customs, safety, best times, transportation tips, cultural insights
+   - **NEVER reference the budget amount in travel tips** (don't say "Budget of X is low/high" or "with your X budget")
+   - Keep tips general, universal, and useful for any traveler
+   - Focus on: local customs, safety, best times, transportation tips, cultural insights, packing suggestions
    - Always include price disclaimer: "Prices are approximate and may vary by season"
 
 **Example Budget Breakdown Calculation:**

@@ -208,22 +208,29 @@ class LLMService:
         if retry_count == 0:
             cached = llm_cache.get(cache_key)
             if cached is not None:
-                logger.info(f"LLM cache hit for {request.destination} ({request.duration_days}d, ${request.budget})")
+                from utils.currency_converter import currency_converter
+                currency_symbol = currency_converter.get_currency_symbol(request.currency)
+                logger.info(f"LLM cache hit for {request.destination} ({request.duration_days}d, {currency_symbol}{request.budget})")
                 return cached
         
         try:
             # Format the prompt with user data
+            # CRITICAL: Include currency symbol so LLM generates prices in correct currency
+            from utils.currency_converter import currency_converter
+            currency_symbol = currency_converter.get_currency_symbol(request.currency)
+            budget_with_currency = f"{currency_symbol}{request.budget}"
+            
             formatted_prompt = self.prompt_template.format(
                 destination=request.destination,
                 duration=request.duration_days,
-                budget=request.budget,
+                budget=budget_with_currency,
                 interests=", ".join(request.interests),
                 weather_context=weather_context if weather_context else ""
             )
             
             # Add retry context if this is a budget adjustment
             if retry_count > 0:
-                formatted_prompt += f"\n\nIMPORTANT: Previous attempt exceeded budget. Please ensure the total cost is BELOW ${request.budget}."
+                formatted_prompt += f"\n\nIMPORTANT: Previous attempt exceeded budget. Please ensure the total cost is BELOW {budget_with_currency}."
             
             # Build request with new API
             contents = [
@@ -352,7 +359,10 @@ class LLMService:
                 # Calculate budget utilization
                 utilization_percentage = (total_cost / request.budget) * 100
                 
-                logger.info(f"Budget utilization: {utilization_percentage:.1f}% (${total_cost:.2f} of ${request.budget})")
+                from utils.currency_converter import currency_converter
+                currency_symbol = currency_converter.get_currency_symbol(request.currency)
+                
+                logger.info(f"Budget utilization: {utilization_percentage:.1f}% ({currency_symbol}{total_cost:.2f} of {currency_symbol}{request.budget})")
                 
                 # Check if budget is significantly underutilized (< 75%)
                 if utilization_percentage < 75 and not budget_utilization_retry_used and attempt < max_retries:
@@ -367,16 +377,16 @@ class LLMService:
                     self.prompt_template = original_prompt + f"""
 
 **IMPORTANT BUDGET UTILIZATION INSTRUCTION:**
-Your previous response only used ${total_cost:.2f} ({utilization_percentage:.1f}%) of the ${request.budget} budget.
+Your previous response only used {currency_symbol}{total_cost:.2f} ({utilization_percentage:.1f}%) of the {currency_symbol}{request.budget} budget.
 This is TOO LOW and provides poor value.
 
 Please regenerate with:
-- Higher quality accommodations (aim for ${request.budget * 0.4:.0f} for lodging)
-- More premium activities and experiences (aim for ${request.budget * 0.25:.0f})
-- Better dining options (aim for ${request.budget * 0.2:.0f})
-- Comfortable transportation (aim for ${request.budget * 0.12:.0f})
+- Higher quality accommodations (aim for {currency_symbol}{request.budget * 0.4:.0f} for lodging)
+- More premium activities and experiences (aim for {currency_symbol}{request.budget * 0.25:.0f})
+- Better dining options (aim for {currency_symbol}{request.budget * 0.2:.0f})
+- Comfortable transportation (aim for {currency_symbol}{request.budget * 0.12:.0f})
 
-TARGET: Use 85-95% of the ${request.budget} budget for an optimized experience.
+TARGET: Use 85-95% of the {currency_symbol}{request.budget} budget for an optimized experience.
 AVOID 98-100% utilization as it appears artificially optimized. Aim for 90-95% sweet spot.
 Keep responses concise to avoid truncation.
 """
@@ -422,7 +432,9 @@ Keep responses concise to avoid truncation.
                 if attempt == max_retries:
                     travel_response = TravelResponse(**itinerary_data)
                     travel_response.budget_status = "over_budget"
-                    logger.warning(f"Budget exceeded: ${total_cost:.2f} > ${request.budget}")
+                    from utils.currency_converter import currency_converter
+                    currency_symbol = currency_converter.get_currency_symbol(request.currency)
+                    logger.warning(f"Budget exceeded: {currency_symbol}{total_cost:.2f} > {currency_symbol}{request.budget}")
                     return travel_response
                     
             except ValueError as e:

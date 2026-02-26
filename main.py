@@ -516,9 +516,10 @@ async def generate_itinerary(request: TravelRequest, db: Session = Depends(get_d
             request.budget
         )
         
+        currency_symbol = currency_converter.get_currency_symbol(request.currency)
         logger.info(
             f"Itinerary generated successfully. "
-            f"Total cost: ${budget_summary['estimated_total_cost']:.2f}, "
+            f"Total cost: {currency_symbol}{budget_summary['estimated_total_cost']:.2f}, "
             f"Status: {budget_summary['status']}"
         )
         
